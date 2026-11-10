@@ -1,0 +1,24 @@
+// monev.js — W-13 Monitoring & Evaluasi Program: capaian per periode, kendala, tren, persetujuan Kepsek
+(function () {
+  const E = U.esc;
+  Crud.page({
+    id: 'monev', prefix: 'evaluasi', title: 'Monitoring & Evaluasi Program', crumb: 'Monitoring & Eval', icon: 'trending_up', roles: ['waka', 'kepsek'], write: ['waka'], addLabel: 'Catat evaluasi', wide: true,
+    sub: 'Program kerja harus hidup dan dievaluasi: catat capaian per periode, kendala, dan tindak lanjut.',
+    search: ['kendala', 'tindak_lanjut', 'periode'], filters: [{ k: 'periode', l: 'Periode', options: ['Triwulan I', 'Triwulan II', 'Triwulan III', 'Triwulan IV', 'Semester Ganjil', 'Semester Genap'] }],
+    kpis: function (d) { const r = d.rows || []; const rata = Math.round(U.avg(r, function (x) { return x.capaian; })); return [{ label: 'Evaluasi', value: r.length, sub: 'tercatat', tone: 'blue', icon: 'rule' }, { label: 'Rata-rata capaian', value: rata + '%', sub: 'target 70%', tone: rata >= 70 ? 'teal' : 'orange', icon: 'target' }, { label: 'Ada kendala', value: r.filter(function (x) { return x.kendala; }).length, sub: 'perlu ditindaklanjuti', tone: 'red', icon: 'report' }, { label: 'Disetujui Kepsek', value: r.filter(function (x) { return x.disetujui_kepsek === 'YA'; }).length, sub: 'dari ' + r.length, tone: 'green', icon: 'verified' }]; },
+    top: function () { return '<div class="card p-4 mb-6"><h2 class="font-headline-h3 text-headline-h3 mb-2">Tren capaian program per triwulan</h2><div data-tren>' + UI.skeleton(2) + '</div></div>'; },
+    afterDraw: function (el) {
+      Store.load('monev:tren', 'evaluasi.tren', {}, { ttl: 60000, render: function (t) { const box = U.$('[data-tren]', el); if (!box) return; const seri = [{ n: 'Rata-rata semua program', v: t.rata, c: '#1E3A8A' }, { n: 'Target ' + t.target + '%', v: t.periode.map(function () { return t.target; }), c: '#B91C1C', dash: 1 }]; box.innerHTML = Charts.line(t.periode, seri, { max: 100, label: 'Tren capaian', legend: true }); } }).catch(function () {});
+      if (!App.isWaka()) return; U.$$('[data-kep]', el).forEach(function () {});
+    },
+    cols: [{ k: 'id_program', l: 'Program', sort: true, r: function (r) { const p = ((Store.get('program:list') || {}).rows || []).find(function (x) { return x.id === r.id_program; }); return '<div class="font-body-medium font-semibold">' + E(p ? p.nama_program : r.id_program) + '</div>'; } }, { k: 'periode', l: 'Periode', sort: true }, { k: 'capaian', l: 'Capaian', sort: true, r: function (r) { return '<div style="min-width:120px">' + UI.progress(r.capaian, U.num(r.capaian) >= 70 ? 'teal' : 'orange') + '</div>'; } }, { k: 'kendala', l: 'Kendala', r: function (r) { return E(r.kendala || '—'); } }, { k: 'tindak_lanjut', l: 'Tindak lanjut', r: function (r) { return E(r.tindak_lanjut || '—'); } }, { k: 'disetujui_kepsek', l: 'Kepsek', r: function (r) { return r.disetujui_kepsek === 'YA' ? UI.badge('Disetujui', 'green') : '<button class="btn btn-sm" data-setuju="' + r.id + '" ' + (App.role() === 'kepsek' ? '' : 'disabled') + '>Setujui</button>'; } }],
+    exportCols: [{ k: 'id_program', l: 'Program', f: function (r) { const p = ((Store.get('program:list') || {}).rows || []).find(function (x) { return x.id === r.id_program; }); return p ? p.nama_program : r.id_program; } }, { k: 'periode', l: 'Periode' }, { k: 'capaian', l: 'Capaian (%)' }, { k: 'kendala', l: 'Kendala' }, { k: 'tindak_lanjut', l: 'Tindak lanjut' }],
+    fields: function () { const ps = (Store.get('program:list') || { rows: [] }).rows; return [{ name: 'id_program', label: 'Program', type: 'select', required: true, placeholder: 'Pilih program…', options: ps.map(function (p) { return { v: p.id, l: p.nama_program }; }), cls: 'sm:col-span-2' }, { name: 'periode', label: 'Periode', type: 'select', required: true, options: ['Triwulan I', 'Triwulan II', 'Triwulan III', 'Triwulan IV', 'Semester Ganjil', 'Semester Genap'] }, { name: 'capaian', label: 'Capaian (%)', type: 'number', required: true, attrs: 'min="0" max="100"' }, { name: 'capaian_teks', label: 'Uraian capaian', cls: 'sm:col-span-2' }, { name: 'kendala', label: 'Kendala', type: 'textarea', cls: 'sm:col-span-2' }, { name: 'tindak_lanjut', label: 'Tindak lanjut', type: 'textarea', cls: 'sm:col-span-2' }]; },
+    defaults: function () { return { periode: 'Triwulan I' }; },
+    toPayload: function (v) { return Object.assign({}, v, { capaian: Number(v.capaian) }); },
+    init: function (el, h) {
+      Store.load('program:list', 'program.list', {}, { ttl: 120000, render: function () { h.draw(); } }).catch(function () {});
+      UI.on(el, 'click', '[data-setuju]', function (b) { UI.busy(b, API.call('evaluasi.setujui', { id: b.dataset.setuju }).then(function () { UI.toast('Evaluasi disetujui.', 'ok'); h.load(true); }).catch(function (e) { UI.toast(e.message, 'err'); })); });
+    }
+  });
+})();

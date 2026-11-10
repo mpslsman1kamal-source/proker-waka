@@ -1,0 +1,97 @@
+/* ProKer Waka Kur — token & dasar. Nilai diambil dari DESIGN-SYNC.md (Stitch w_01–w_16). */
+:root{
+  --primary:#00236F; --primary-container:#1E3A8A; --secondary:#006A63; --error:#BA1A1A;
+  --teal:#0F766E; --green:#15803D; --orange:#EA580C; --red:#B91C1C; --blue:#1E3A8A;
+  --bg:#F8FAFC; --text:#0F172A; --border:#DDE3E9; --chip:#E9EEF5; --sidebar-border:#172E6D;
+  --muted:#444651; --surface:#FFFFFF; --sidebar-w:220px; --topbar-h:56px;
+}
+html,body{margin:0;padding:0;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.font-mono-data,.font-mono-header{font-family:'JetBrains Mono',ui-monospace,monospace}
+.material-symbols-outlined{font-family:'Material Symbols Outlined';font-weight:400;font-style:normal;line-height:1;display:inline-block;letter-spacing:normal;text-transform:none;white-space:nowrap;width:1em;overflow:hidden;vertical-align:middle;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;user-select:none;vertical-align:middle}
+.material-symbols-outlined.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+[hidden]{display:none!important}
+::-webkit-scrollbar{width:0;height:0}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-x::-webkit-scrollbar{height:6px;display:block}.scroll-x::-webkit-scrollbar-thumb{background:#c5c5d3;border-radius:6px}
+
+/* Boot */
+.boot{position:fixed;inset:0;background:var(--primary-container);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:300;transition:opacity .25s}
+.boot.off{opacity:0;pointer-events:none}
+.boot-logo{width:44px;height:44px;border-radius:10px;border:3px solid rgba(255,255,255,.25);border-top-color:#99EFE5;animation:spin .8s linear infinite}
+.boot-txt{font-size:13px;opacity:.8}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Cangkang & responsif */
+.shell-body{padding-left:var(--sidebar-w)}
+.topbar{left:var(--sidebar-w);right:0}
+.page{display:none}.page.on{display:block;animation:fade .12s ease-out}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+.pad{padding:2rem}
+.bottomnav{display:none}
+.menu-btn{display:none}
+@media (max-width:1023px){
+  :root{--sidebar-w:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .2s;width:260px!important}
+  .sidebar.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.35)}
+  .scrim{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:45}
+  .menu-btn{display:inline-flex}
+  .pad{padding:1rem}
+}
+@media (max-width:767px){
+  main{padding-bottom:72px}
+  .bottomnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--border);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .bottomnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:10px;color:#64748b;border-radius:8px;text-decoration:none;min-height:48px;justify-content:center}
+  .bottomnav a.on{color:var(--primary-container);font-weight:600;background:#E9EEF5}
+  .hide-m{display:none!important}
+}
+@media (pointer:coarse){ .btn,.tap,button,select,input:not([type=checkbox]):not([type=radio]){min-height:44px} .tap-sm{min-height:36px} }
+
+/* Komponen bersama */
+.card{background:#fff;border:1px solid var(--border);border-radius:.5rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;border-radius:.5rem;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:background .12s,box-shadow .12s;white-space:nowrap}
+.btn:hover{background:#F1F5F9}.btn:focus-visible,.inp:focus-visible,a:focus-visible,button:focus-visible{outline:2px solid #4059aa;outline-offset:2px}
+.btn-pri{background:var(--primary-container);color:#fff;border-color:var(--primary-container)}.btn-pri:hover{background:var(--primary)}
+.btn-ok{background:var(--teal);color:#fff;border-color:var(--teal)}.btn-ok:hover{background:#0b5f58}
+.btn-bad{background:var(--red);color:#fff;border-color:var(--red)}.btn-bad:hover{background:#991b1b}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.inp{width:100%;border:1px solid var(--border);border-radius:.5rem;padding:7px 10px;font-size:14px;background:#fff;color:var(--text);font-family:inherit}
+.inp:focus{border-color:#4059aa}
+.inp.err{border-color:var(--red)}
+.lbl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.errtxt{color:var(--red);font-size:12px;margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;line-height:16px}
+.b-green{background:#DCFCE7;color:#166534}.b-blue{background:#DBEAFE;color:#1E3A8A}.b-orange{background:#FFEDD5;color:#9A3412}.b-red{background:#FEE2E2;color:#991B1B}.b-gray{background:#E9EEF5;color:#334155}.b-teal{background:#CCFBF1;color:#0F766E}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:#475569;text-align:left;padding:8px 12px;background:#F1F5F9;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:9px 12px;border-bottom:1px solid #EEF2F6;vertical-align:middle}
+.tbl tbody tr:hover{background:#F8FAFC}
+.tbl tr.sel{background:#EEF4FF}
+.skel{background:linear-gradient(90deg,#e9eef5 25%,#f4f7fb 37%,#e9eef5 63%);background-size:400% 100%;animation:shim 1.2s ease infinite;border-radius:6px}
+@keyframes shim{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.prog{height:6px;background:#E2E8F0;border-radius:999px;overflow:hidden}.prog>i{display:block;height:100%;border-radius:999px;transition:width .3s}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:500;cursor:pointer}
+.chip.on{background:var(--primary-container);color:#fff;border-color:var(--primary-container)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tabs button{padding:9px 14px;font-size:13px;font-weight:600;color:#64748b;border:0;background:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--primary-container);border-bottom-color:var(--primary-container)}
+
+/* Overlay: modal & laci */
+#overlay-root>.ov{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .12s}
+.ov .box{background:#fff;border-radius:.75rem;width:100%;max-width:560px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(15,23,42,.3)}
+.ov .box.wide{max-width:860px}
+.ov .box>.hd{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:16px}
+.ov .box>.bd{padding:16px 20px;overflow:auto}
+.ov .box>.ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.ov.drawer{justify-content:flex-end;padding:0;align-items:stretch}
+.ov.drawer .box{max-width:480px;max-height:none;height:100%;border-radius:0}
+@media (max-width:767px){.ov{align-items:flex-end;padding:0}.ov .box{max-width:none;border-radius:.75rem .75rem 0 0}.ov.drawer .box{max-width:none}}
+#toast-root{position:fixed;right:16px;bottom:16px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 32px)}
+@media (max-width:767px){#toast-root{bottom:80px;left:16px}}
+.toast{background:#0F172A;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;display:flex;gap:8px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:fade .15s}
+.toast.ok{background:#0F766E}.toast.err{background:#B91C1C}.toast.warn{background:#EA580C;color:#0F172A}
+.dz{border:2px dashed #c5c5d3;border-radius:.5rem;padding:20px;text-align:center;color:#64748b;cursor:pointer;background:#fff}
+.dz.over{background:#EEF4FF;border-color:#4059aa}
+.svgchart text{font-family:Inter,sans-serif}
+@media print{.sidebar,.topbar,.bottomnav,#toast-root,.no-print{display:none!important}.shell-body{padding:0}main{padding:0!important}}

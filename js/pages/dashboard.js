@@ -1,0 +1,32 @@
+// dashboard.js — W-02 (Waka & Kepsek) dan W-03 (Guru): ringkasan perjalanan 10 program, agenda, perlu tindakan
+(function () {
+  const E = U.esc, TONE = { 'Selesai': 'green', 'Berjalan': 'teal', 'Terlambat': 'red', 'Belum Mulai': 'gray' };
+  const PRI = { Tinggi: 'red', Sedang: 'orange', Rendah: 'gray' };
+  function programGrid(d) {
+    return '<section class="mb-6"><div class="flex items-center justify-between mb-3"><h2 class="font-headline-h2 text-headline-h2">Perjalanan ' + d.program.length + ' Program Kerja Tahunan</h2><a class="btn btn-sm" href="#/program">Lihat semua</a></div><div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">' + d.program.map(function (p) {
+      return '<a href="#/program" class="card p-3 block hover:shadow-md transition-shadow"><div class="flex items-center justify-between mb-2"><span class="font-mono-header text-mono-header text-on-surface-variant">' + E(('0' + p.kategori).slice(-2)) + '</span>' + UI.badge(p.status, UI.tone(p.status)) + '</div><div class="text-[13px] font-semibold leading-snug min-h-[36px]">' + E(p.pendek) + '</div><div class="mt-2">' + UI.progress(p.progres, TONE[p.status]) + '</div></a>';
+    }).join('') + '</div></section>';
+  }
+  function agenda(d) {
+    return UI.section('Agenda 7 Hari ke Depan', '<a class="btn btn-sm" href="#/kalender">Kalender</a>', d.agenda.length ? '<ul class="space-y-2">' + d.agenda.map(function (a) { return '<li><a href="' + a.rute + '" class="flex gap-3 items-start p-2 rounded-lg hover:bg-[#F8FAFC]"><div class="w-12 shrink-0 text-center rounded-lg bg-[#E9EEF5] py-1"><div class="font-mono-data text-[10px] uppercase text-on-surface-variant">' + U.BLN3[Number(a.tgl.slice(5, 7)) - 1] + '</div><div class="font-stat-numeral text-[18px] leading-none">' + Number(a.tgl.slice(8)) + '</div></div><div class="min-w-0"><div class="text-[13px] font-semibold truncate">' + E(a.judul) + '</div><div class="text-caption text-on-surface-variant">' + E(a.jenis) + (a.jam ? ' · ' + E(a.jam) : '') + ' · ' + U.rel(a.tgl) + '</div></div></a></li>'; }).join('') + '</ul>' : UI.empty({ icon: 'event_available', title: 'Tidak ada agenda', text: 'Tidak ada kegiatan dalam 7 hari ke depan.' }));
+  }
+  function aksi(d) {
+    return UI.section('Perlu Tindakan', '', d.aksi.length ? UI.table({ cols: [{ k: 'jenis', l: 'Jenis', r: function (r) { return '<span class="font-semibold">' + E(r.jenis) + '</span>'; } }, { k: 'judul', l: 'Rincian' }, { k: 'pj', l: 'PJ' }, { k: 'tenggat', l: 'Tenggat', r: function (r) { return r.tenggat ? U.tgl(r.tenggat) : '—'; } }, { k: 'prioritas', l: 'Prioritas', r: function (r) { return UI.badge(r.prioritas, PRI[r.prioritas]); } }, { l: '', r: function (r) { return '<a class="btn btn-sm" href="' + r.rute + '">Buka</a>'; } }], rows: d.aksi }) : UI.empty({ icon: 'task_alt', title: 'Semua beres', text: 'Tidak ada yang perlu ditindaklanjuti.' }), 'p-0');
+  }
+  function viewWaka(d) {
+    const k = d.kpi, ind = '<div class="card p-4"><div class="flex items-center justify-between mb-2"><h2 class="font-headline-h3 text-headline-h3">Capaian Indikator Program</h2><span class="badge b-red">Target ' + d.target + '%</span></div>' + Charts.bar(d.indikator.map(function (x) { return { l: x.l.split(' ')[0], v: x.v }; }), { target: d.target, unit: '%', max: 100 }) + '</div>';
+    return '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' + UI.kpiSolid({ label: 'Program Kerja', value: k.program, sub: k.selesai + ' selesai', tone: 'blue', icon: 'assignment' }) + UI.kpiSolid({ label: 'Rata-rata Capaian', value: k.rata_progres + '%', sub: 'seluruh program', tone: 'teal', icon: 'trending_up' }) + UI.kpiSolid({ label: 'Terlambat', value: k.terlambat, sub: 'program melewati tenggat', tone: 'red', icon: 'warning' }) + UI.kpiSolid({ label: 'Jadwal Pekan Ini', value: k.jadwal_pekan, sub: k.supervisi_menunggu + ' supervisi menunggu', tone: 'orange', icon: 'event' }) + '</div>' + programGrid(d) + '<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6"><div class="xl:col-span-2">' + ind + '</div>' + agenda(d) + '</div>' + aksi(d);
+  }
+  function viewGuru(d) {
+    const s = d.saya || {}, wajar = s.beban_jp >= s.jp_min && s.beban_jp <= s.jp_maks;
+    return '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">' + UI.kpiSolid({ label: 'Beban Mengajar', value: s.beban_jp + ' JP', sub: wajar ? 'dalam rentang 24–40' : 'di luar rentang 24–40', tone: wajar ? 'blue' : 'red', icon: 'schedule' }) + UI.kpiSolid({ label: 'Konfirmasi Tugas', value: s.status_tugas === 'Dikonfirmasi' ? 'Sudah' : 'Belum', sub: s.status_tugas || 'belum ada penugasan', tone: s.status_tugas === 'Dikonfirmasi' ? 'teal' : 'orange', icon: 'how_to_reg' }) + UI.kpiSolid({ label: 'Supervisi Saya', value: (s.supervisi || []).length, sub: 'terjadwal / selesai', tone: 'teal', icon: 'supervisor_account' }) + UI.kpiSolid({ label: 'Agenda Pekan Ini', value: d.agenda.length, sub: '7 hari ke depan', tone: 'orange', icon: 'event' }) + '</div><div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6"><div class="xl:col-span-2">' + aksi(d) + '</div>' + agenda(d) + '</div>' + programGrid(d);
+  }
+  App.page('dashboard', {
+    title: 'Dashboard', crumb: 'Dashboard',
+    init: function (el) { el.innerHTML = '<div class="d-body"></div>'; UI.on(el, 'click', '[data-retry]', function () { load(true); }); },
+    show: function (el) { load(); }, onBoot: function () { if (App.cur === 'dashboard') draw(Store.get('dashboard')); }
+  });
+  let last = null;
+  function draw(d) { const el = U.$('#pg-dashboard'); if (!el || !d) return; const nama = App.user ? App.user.nama.split(',')[0] : ''; el.querySelector('.d-body').innerHTML = UI.pageHeader({ title: d.peran === 'guru' ? 'Dashboard Guru' : d.peran === 'kepsek' ? 'Dashboard Kepala Sekolah' : 'Dashboard Waka Kurikulum', sub: 'Selamat datang, ' + nama + '. Tahun ajaran ' + d.tahun + ' · Semester ' + d.semester + '.', actions: d.peran === 'waka' ? '<a class="btn btn-pri" href="#/program/baru">' + UI.icon('add', 'text-[18px]') + ' Program baru</a>' : '' }) + (d.peran === 'guru' ? viewGuru(d) : viewWaka(d)); App.setBadges(d.badges); last = d; }
+  function load(force) { Store.load('dashboard', 'dashboard.get', {}, { persist: true, ttl: 30000, force: force, render: draw, loading: function () { const el = U.$('#pg-dashboard .d-body'); if (el) el.innerHTML = UI.skelPage(); }, error: function (e) { const el = U.$('#pg-dashboard .d-body'); if (el) el.innerHTML = UI.errorRetry(e.message); } }).catch(function () {}); }
+})();
